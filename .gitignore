@@ -40,3 +40,8 @@ nosetests.xml
 
 # Virtual environment
 venv
+
+# Pycharm
+.idea/
+
+gmail_app.txt
