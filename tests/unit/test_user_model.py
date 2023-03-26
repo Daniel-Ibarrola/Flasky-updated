@@ -6,8 +6,8 @@ from app.models import User, db
 pytestmark = pytest.mark.usefixtures("set_up_flask_app")
 
 
-def add_user_to_db(password):
-    user = User(password="cat")
+def add_user_to_db(password, email=None):
+    user = User(password="cat", email=email)
     db.session.add(user)
     db.session.commit()
     return user
@@ -68,3 +68,27 @@ def test_invalid_reset_token():
     token = user.generate_reset_token()
     assert not User.reset_password(token + "a", "horse")
     assert user.verify_password("cat")
+
+
+def test_valid_email_change_token():
+    user = add_user_to_db(email="john@example.com", password="cat")
+    token = user.generate_email_change_token("susan@example.org")
+    assert user.change_email(token)
+    assert user.email == "susan@example.org"
+
+
+def test_invalid_email_change_token():
+    user1 = add_user_to_db(email="john@example.com", password="cat")
+    user2 = add_user_to_db(email="susan@example.org", password="dog")
+    token = user1.generate_email_change_token("david@example.com")
+    assert not user2.change_email(token)
+    assert user2.email == "susan@example.org"
+    assert user1.email == "john@example.com"
+
+
+def test_duplicate_email_change_token():
+    user1 = add_user_to_db(email="john@example.com", password="cat")
+    user2 = add_user_to_db(email="susan@example.org", password="dog")
+    token = user2.generate_email_change_token("john@example.com")
+    assert not user2.change_email(token)
+    assert user2.email == "susan@example.org"
