@@ -1,7 +1,7 @@
 from flask import current_app
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer as Serializer
-from itsdangerous.exc import SignatureExpired
+from itsdangerous.exc import BadSignature
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from . import db
@@ -51,12 +51,30 @@ class User(UserMixin, db.Model):
         serializer = Serializer(current_app.config["SECRET_KEY"])
         try:
             data = serializer.loads(token, max_age=expiration)
-        except SignatureExpired:
+        except BadSignature:
             return False
         if data.get("confirm") != self.id:
             return False
         self.confirmed = True
         db.session.add(self)
+        return True
+
+    def generate_reset_token(self):
+        serializer = Serializer(current_app.config["SECRET_KEY"])
+        return serializer.dumps({"reset": self.id})
+
+    @staticmethod
+    def reset_password(token, new_password, expiration=3600):
+        serializer = Serializer(current_app.config["SECRET_KEY"])
+        try:
+            data = serializer.loads(token, max_age=expiration)
+        except BadSignature:
+            return False
+        user = User.query.get(data.get("reset"))
+        if user is None:
+            return False
+        user.password = new_password
+        db.session.add(user)
         return True
 
     def __repr__(self):
