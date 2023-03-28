@@ -1,4 +1,5 @@
 from app import create_app, db
+from app.models import Role
 import pytest
 
 
@@ -7,6 +8,8 @@ def set_up():
     app_context = app.app_context()
     app_context.push()
     db.create_all()
+
+    Role.insert_roles()
     return app_context
 
 

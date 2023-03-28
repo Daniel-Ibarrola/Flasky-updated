@@ -1,6 +1,7 @@
 import time
 import pytest
-from app.models import User, db
+from app import db
+from app.models import AnonymousUser, User, Permission, Role
 
 
 pytestmark = pytest.mark.usefixtures("set_up_flask_app")
@@ -92,3 +93,38 @@ def test_duplicate_email_change_token():
     token = user2.generate_email_change_token("john@example.com")
     assert not user2.change_email(token)
     assert user2.email == "susan@example.org"
+
+
+def test_user_role():
+    user = User(email="john@example.com", password="cat")
+    assert user.can(Permission.FOLLOW)
+    assert user.can(Permission.COMMENT)
+    assert user.can(Permission.WRITE)
+    assert not user.can(Permission.MODERATE)
+    assert not user.can(Permission.ADMIN)
+
+
+def test_anonymous_user():
+    user = AnonymousUser()
+    assert not user.can(Permission.FOLLOW)
+    assert not user.can(Permission.COMMENT)
+    assert not user.can(Permission.WRITE)
+    assert not user.can(Permission.MODERATE)
+    assert not user.can(Permission.ADMIN)
+
+
+def test_moderator_role():
+    role = Role.query.filter_by(name="Moderator").first()
+    user = User(email="john@example.com", password="cat", role=role)
+    assert user.can(Permission.FOLLOW)
+    assert user.can(Permission.COMMENT)
+    assert user.can(Permission.WRITE)
+    assert user.can(Permission.MODERATE)
+    assert not user.can(Permission.ADMIN)
+
+
+def test_admin_role():
+    role = Role.query.filter_by(name="Administrator").first()
+    user = User(email="john@example.com", password="cat", role=role)
+    assert user.is_administrator()
+
