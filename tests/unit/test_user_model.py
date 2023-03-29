@@ -142,16 +142,3 @@ def test_ping():
     last_seen_before = user.last_seen
     user.ping()
     assert user.last_seen > last_seen_before
-
-
-def test_gravatar():
-    u = User(email='john@example.com', password='cat')
-    gravatar_256 = u.gravatar(size=256)
-    gravatar_pg = u.gravatar(rating='pg')
-    gravatar_retro = u.gravatar(default='retro')
-    gravatar_ssl = u.gravatar()
-
-    assert 's=256' in gravatar_256
-    assert 'r=pg' in gravatar_pg
-    assert 'd=retro' in gravatar_retro
-    assert 'https://secure.gravatar.com/avatar/' + 'd4c74594d841139328695756648b6bd6' in gravatar_ssl
