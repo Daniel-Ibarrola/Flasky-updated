@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 import pytest
 from app import db
@@ -128,3 +129,29 @@ def test_admin_role():
     user = User(email="john@example.com", password="cat", role=role)
     assert user.is_administrator()
 
+
+def test_timestamps():
+    user = add_user_to_db(password="cat")
+    assert (datetime.utcnow() - user.member_since).total_seconds() < 3
+    assert (datetime.utcnow() - user.last_seen).total_seconds() < 3
+
+
+def test_ping():
+    user = add_user_to_db(password="cat")
+    time.sleep(2)
+    last_seen_before = user.last_seen
+    user.ping()
+    assert user.last_seen > last_seen_before
+
+
+def test_gravatar():
+    u = User(email='john@example.com', password='cat')
+    gravatar_256 = u.gravatar(size=256)
+    gravatar_pg = u.gravatar(rating='pg')
+    gravatar_retro = u.gravatar(default='retro')
+    gravatar_ssl = u.gravatar()
+
+    assert 's=256' in gravatar_256
+    assert 'r=pg' in gravatar_pg
+    assert 'd=retro' in gravatar_retro
+    assert 'https://secure.gravatar.com/avatar/' + 'd4c74594d841139328695756648b6bd6' in gravatar_ssl

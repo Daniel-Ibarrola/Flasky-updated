@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 from flask import current_app
 from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import URLSafeTimedSerializer as Serializer
@@ -174,6 +175,11 @@ class User(UserMixin, db.Model):
         self.last_seen = datetime.datetime.utcnow()
         db.session.add(self)
         db.session.commit()
+
+    def gravatar(self, size=100, default="identicon", rating="g"):
+        url = "https://secure.gravatar.com/avatar"
+        hash_ = hashlib.md5(self.email.lower().encode("utf-8")).hexdigest()
+        return f"{url}/{hash_}?s={size}&d={default}&r={rating}"
 
     def __repr__(self):
         return '<User %r>' % self.username
