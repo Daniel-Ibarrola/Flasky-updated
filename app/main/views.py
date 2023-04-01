@@ -1,4 +1,4 @@
-from flask import flash, render_template, redirect, url_for
+from flask import abort, flash, render_template, redirect, url_for
 from flask_login import current_user, login_required
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm
@@ -25,8 +25,11 @@ def index():
 
 @main.route("/user/<username>")
 def user(username):
-    user_ = User.query.filter_by(username=username).first_or_404()
-    return render_template("user.html", user=user_)
+    user_ = User.query.filter_by(username=username).first()
+    if user_ is None:
+        abort(404)
+    posts = user_.posts.order_by(Post.timestamp.desc()).all()
+    return render_template("user.html", user=user_, posts=posts)
 
 
 @main.route("/edit-profile", methods=["GET", "POST"])
