@@ -1,4 +1,4 @@
-from flask import abort, current_app,  flash, render_template, request, redirect, url_for
+from flask import abort, current_app, flash, render_template, request, redirect, url_for
 from flask_login import current_user, login_required
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm
@@ -88,3 +88,21 @@ def edit_profile_admin(id):
 def post(id):
     post_ = Post.query.get_or_404(id)
     return render_template("post.html", posts=[post_])
+
+
+@main.route("/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def edit(id):
+    post_ = Post.query.get_or_404(id)
+    if current_user != post_.author and \
+            not current_user.can(Permission.ADMIN):
+        abort(403)
+    form = PostForm()
+    if form.validate_on_submit():
+        post_.body = form.body.data
+        db.session.add(post_)
+        db.session.commit()
+        flash("The post has been updated.")
+        return redirect(url_for(".post", id=post_.id))
+    form.body.data = post_.body
+    return render_template("edit_post.html", form=form)
