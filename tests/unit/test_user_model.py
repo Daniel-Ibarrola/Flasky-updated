@@ -8,8 +8,8 @@ from app.models import AnonymousUser, User, Permission, Role
 pytestmark = pytest.mark.usefixtures("set_up_flask_app")
 
 
-def add_user_to_db(password, email=None):
-    user = User(password="cat", email=email)
+def add_user_to_db(password, email=None, username=None):
+    user = User(password=password, email=email, username=username)
     db.session.add(user)
     db.session.commit()
     return user
@@ -100,7 +100,7 @@ def test_user_role():
     user = User(email="john@example.com", password="cat")
     assert user.can(Permission.FOLLOW)
     assert user.can(Permission.COMMENT)
-    assert user.can(Permission.WRITE)
+    assert user.can(Permission.WRITE_ARTICLES)
     assert not user.can(Permission.MODERATE)
     assert not user.can(Permission.ADMIN)
 
@@ -109,7 +109,7 @@ def test_anonymous_user():
     user = AnonymousUser()
     assert not user.can(Permission.FOLLOW)
     assert not user.can(Permission.COMMENT)
-    assert not user.can(Permission.WRITE)
+    assert not user.can(Permission.WRITE_ARTICLES)
     assert not user.can(Permission.MODERATE)
     assert not user.can(Permission.ADMIN)
 
@@ -119,7 +119,7 @@ def test_moderator_role():
     user = User(email="john@example.com", password="cat", role=role)
     assert user.can(Permission.FOLLOW)
     assert user.can(Permission.COMMENT)
-    assert user.can(Permission.WRITE)
+    assert user.can(Permission.WRITE_ARTICLES)
     assert user.can(Permission.MODERATE)
     assert not user.can(Permission.ADMIN)
 
@@ -142,3 +142,16 @@ def test_ping():
     last_seen_before = user.last_seen
     user.ping()
     assert user.last_seen > last_seen_before
+
+
+def test_can_follow_and_unfollow_users():
+    user1 = add_user_to_db(username="john", password="cat")
+    user2 = add_user_to_db(username="susan", password="dog")
+
+    user1.follow(user2)
+    assert user1.is_following(user2)
+    assert user2.is_followed_by(user1)
+
+    user1.unfollow(user2)
+    assert not user1.is_following(user2)
+    assert not user2.is_followed_by(user1)

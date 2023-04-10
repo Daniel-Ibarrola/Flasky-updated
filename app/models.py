@@ -45,11 +45,11 @@ class Role(db.Model):
     @staticmethod
     def insert_roles():
         roles = {
-            "User": [Permission.FOLLOW, Permission.COMMENT, Permission.WRITE],
+            "User": [Permission.FOLLOW, Permission.COMMENT, Permission.WRITE_ARTICLES],
             "Moderator": [Permission.FOLLOW, Permission.COMMENT,
-                          Permission.WRITE, Permission.MODERATE],
+                          Permission.WRITE_ARTICLES, Permission.MODERATE],
             "Administrator": [Permission.FOLLOW, Permission.COMMENT,
-                              Permission.WRITE, Permission.MODERATE, Permission.ADMIN]
+                              Permission.WRITE_ARTICLES, Permission.MODERATE, Permission.ADMIN]
         }
         default_role = "User"
         for role_name in roles.keys():
@@ -72,6 +72,13 @@ class Role(db.Model):
         return '<Role %r>' % self.name
 
 
+class Follow(db.Model):
+    __tablename__ = "follows"
+    follower_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    followed_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -87,6 +94,20 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(), default=datetime.datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship("Post", backref="author", lazy="dynamic")
+    followed = db.relationship(
+        "Follow",
+        foreign_keys=[Follow.follower_id],
+        backref=db.backref("follower", lazy="joined"),
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+    followers = db.relationship(
+        "Follow",
+        foreign_keys=[Follow.followed_id],
+        backref=db.backref("followed", lazy="joined"),
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -193,6 +214,28 @@ class User(UserMixin, db.Model):
             hash_ = self.avatar_hash
 
         return f"{url}/{hash_}?s={size}&d={default}&r={rating}"
+
+    def follow(self, user):
+        if not self.is_following(user):
+            follow = Follow(follower=self, followed=user)
+            db.session.add(follow)
+
+    def unfollow(self, user):
+        follower = self.followed.filter_by(followed_id=user.id).first()
+        if follower:
+            db.session.delete(follower)
+
+    def is_following(self, user):
+        if user.id is None:
+            return False
+        return self.followed.filter_by(
+            followed_id=user.id).first() is not None
+
+    def is_followed_by(self, user):
+        if user.id is None:
+            return False
+        return self.followers.filter_by(
+            follower_id=user.id).first() is not None
 
     def __repr__(self):
         return '<User %r>' % self.username
