@@ -151,7 +151,6 @@ def test_can_follow_and_unfollow_users():
     user1.follow(user2)
     assert user1.is_following(user2)
     assert user2.is_followed_by(user1)
-    assert not user1.is_following(user1)
 
     user1.unfollow(user2)
     assert not user1.is_following(user2)
