@@ -2,9 +2,9 @@ from flask import abort, current_app, flash, \
     make_response, render_template, request, redirect, url_for
 from flask_login import current_user, login_required
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, PostForm
+from .forms import CommentForm, EditProfileForm, EditProfileAdminForm, PostForm
 from .. import db
-from ..models import User, Role, Permission, Post
+from ..models import Comment, User, Role, Permission, Post
 from ..decorators import admin_required, permission_required
 
 
@@ -12,7 +12,7 @@ from ..decorators import admin_required, permission_required
 @login_required
 def show_all():
     resp = make_response(redirect(url_for(".index")))
-    resp.set_cookie("show_followed", "", max_age=30*24*60*60)
+    resp.set_cookie("show_followed", "", max_age=30 * 24 * 60 * 60)
     return resp
 
 
@@ -20,7 +20,7 @@ def show_all():
 @login_required
 def show_followed():
     resp = make_response(redirect(url_for(".index")))
-    resp.set_cookie("show_followed", "1", max_age=30*24*60*60)
+    resp.set_cookie("show_followed", "1", max_age=30 * 24 * 60 * 60)
     return resp
 
 
@@ -116,10 +116,37 @@ def edit_profile_admin(id):
     return render_template("edit_profile.html", form=form, user=user)
 
 
-@main.route("/post/<int:id>")
+@main.route("/post/<int:id>", methods=["GET", "POST"])
 def post(id):
     post_ = Post.query.get_or_404(id)
-    return render_template("post.html", posts=[post_])
+    form = CommentForm()
+    if current_user.can(Permission.COMMENT) \
+            and form.validate_on_submit():
+        comment = Comment(
+            body=form.body.data,
+            author=current_user._get_current_object(),
+            post=post_
+        )
+        db.session.add(comment)
+        db.session.commit()
+        flash("Your comment has been published")
+        return redirect(url_for(".post", id=post_.id, page=-1))
+
+    page = request.args.get("page", 1, type=int)
+    if page == -1:
+        page = (post_.comments.count() - 1) // \
+                current_app.config["FLASKY_COMMENTS_PER_PAGE"] + 1
+    pagination = post_.comments.order_by(Comment.timestamp.asc()).paginate(
+        page=page, per_page=current_app.config["FLASKY_COMMENTS_PER_PAGE"],
+        error_out=False
+    )
+    comments = pagination.items
+    return render_template(
+        "post.html",
+        posts=[post_],
+        form=form,
+        comments=comments
+    )
 
 
 @main.route("/edit/<int:id>", methods=["GET", "POST"])
