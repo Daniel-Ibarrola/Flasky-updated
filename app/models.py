@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import bleach
-from flask import current_app, request
+from flask import current_app, request, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from itsdangerous.exc import BadSignature
@@ -252,6 +252,30 @@ class User(UserMixin, db.Model):
                 db.session.add(user)
                 db.session.commit()
 
+    def generate_auth_token(self):
+        serializer = Serializer(current_app.config["SECRET_KEY"])
+        return serializer.dumps({"confirm": self.id})
+
+    @staticmethod
+    def verify_auth_token(token, expiration=3600):
+        serializer = Serializer(current_app.config["SECRET_KEY"])
+        try:
+            data = serializer.loads(token, max_age=expiration)
+        except BadSignature:
+            return
+        return User.query.get(data["id"])
+
+    def to_json(self):
+        return {
+            "url": url_for("api.get_user", id=self.id),
+            "username": self.username,
+            "member_since": self.member_since,
+            "last_seen": self.last_seen,
+            "post_url": url_for("api.get_user_posts", id=self.id),
+            "followed_posts_url": url_for("api.get_user_followed_posts", id=self.id),
+            "post_count": self.posts.count(),
+        }
+
     def __repr__(self):
         return '<User %r>' % self.username
 
@@ -271,6 +295,10 @@ def load_user(user_id):
 
 
 login_manager.anonymous_user = AnonymousUser
+
+
+class ValidationError(ValueError):
+    pass
 
 
 class Post(db.Model):
@@ -294,6 +322,24 @@ class Post(db.Model):
             bleach.clean(markdown(value, output_format="html"),
                          tags=allowed_tags, strip=True),
         )
+
+    def to_json(self):
+        return {
+            "url": url_for("api.get_post", id=self.id),
+            "body": self.body,
+            "body_html": self.body_html,
+            "timestamp": self.timestamp,
+            "author_url": url_for("api.get_user", id=self.author_id),
+            "comments_url": url_for("api.get_post_comments", id=self.id),
+            "comment_count": self.comments.count()
+        }
+
+    @staticmethod
+    def from_json(json_post):
+        body = json_post.get("body")
+        if body is None or body == "":
+            raise ValidationError("Post doesn't have a body")
+        return Post(body=body)
 
 
 db.event.listen(Post.body, "set", Post.on_changed_body)
