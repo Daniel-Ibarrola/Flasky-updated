@@ -325,7 +325,7 @@ class Post(db.Model):
 
     def to_json(self):
         return {
-            "url": url_for("api.get_post", id=self.id),
+            "url": url_for("api.get_posts", id=self.id),
             "body": self.body,
             "body_html": self.body_html,
             "timestamp": self.timestamp,
@@ -365,6 +365,23 @@ class Comment(db.Model):
             bleach.clean(markdown(value, output_format="html"),
                          tags=allowed_tags, strip=True),
         )
+
+    def to_json(self):
+        return {
+            "body": self.body,
+            "body_html": self.body_html,
+            "timestamp": self.timestamp,
+            "url": url_for("api.get_comment", id=self.id),
+            "author_url": url_for("api.get_user", id=self.author_id),
+            "post_url": url_for("api.get_posts", id=self.post_id),
+        }
+
+    @staticmethod
+    def from_json(json_comment):
+        body = json_comment.get("body")
+        if body is None or body == "":
+            raise ValidationError("Comment doesn't have a body")
+        return Comment(body=body)
 
 
 db.event.listen(Comment.body, "set", Comment.on_changed_body)
