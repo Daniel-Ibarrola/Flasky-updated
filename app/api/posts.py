@@ -1,16 +1,23 @@
-from flask import g, jsonify, request, url_for
+from flask import current_app, g, jsonify, request, url_for
 from . import api
 from .. import db
 from .errors import forbidden
 from .decorators import permission_required
+from .paginate import paginate
 from ..models import Comment, Post, Permission
 
 
 @api.route("/posts/")
 def get_posts():
-    posts = Post.query.all()
+    page = request.args.get("page", 1, type=int)
+    posts, prev, next_page, total = paginate(
+        Post.query, page, current_app.config["FLASKY_POSTS_PER_PAGE"], "api.get_posts"
+    )
     return jsonify({
-        "posts": [p.to_json() for p in posts]
+        "posts": [p.to_json() for p in posts],
+        "prev": prev,
+        "next": next_page,
+        "count": total
     })
 
 
@@ -49,10 +56,17 @@ def edit_post(id):
 @api.route("/posts/<int:id>/comments/")
 def get_post_comments(id):
     post = Post.query.get_or_404(id)
-    comments = post.comments.all()
-    return {
-        "comments": [c.to_json() for c in comments]
-    }
+    page = request.args.get("page", 1, type=int)
+    comments, prev, next_page, total = paginate(
+        post.comments.order_by(Comment.timestamp.asc()),
+        page, current_app.config["FLASKY_COMMENTS_PER_PAGE"], "api.get_comments"
+    )
+    return jsonify({
+        "comments": [c.to_json() for c in comments],
+        "prev": prev,
+        "next": next_page,
+        "count": total
+    })
 
 
 @api.route("/posts/<int:id>/comments/", methods=["POST"])
