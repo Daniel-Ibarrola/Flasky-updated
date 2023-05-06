@@ -32,3 +32,11 @@ def client():
     client = app.test_client(use_cookies=True)
     yield client
     tear_down(app_context)
+
+
+@pytest.fixture()
+def client_no_cookies():
+    app, app_context = set_up()
+    client = app.test_client(use_cookies=False)
+    yield client
+    tear_down(app_context)

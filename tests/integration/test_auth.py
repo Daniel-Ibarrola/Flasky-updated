@@ -2,12 +2,6 @@ from app.models import User
 import re
 
 
-def test_home_page(client):
-    response = client.get("/")
-    assert response.status_code == 200
-    assert "Stranger" in response.get_data(as_text=True)
-
-
 def test_register_and_login(client):
     # Register a new account
     response = client.post("/auth/register", data={
