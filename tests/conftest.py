@@ -10,7 +10,7 @@ def set_up():
     db.create_all()
 
     Role.insert_roles()
-    return app_context
+    return app, app_context
 
 
 def tear_down(context):
@@ -21,6 +21,14 @@ def tear_down(context):
 
 @pytest.fixture
 def set_up_flask_app():
-    app_context = set_up()
+    app, app_context = set_up()
     yield
+    tear_down(app_context)
+
+
+@pytest.fixture()
+def client():
+    app, app_context = set_up()
+    client = app.test_client(use_cookies=True)
+    yield client
     tear_down(app_context)
