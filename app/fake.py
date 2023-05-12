@@ -1,11 +1,18 @@
 from random import randint
-from sqlalchemy.exc import IntegrityError
+# from sqlalchemy.exc import IntegrityError
 from faker import Faker
-from . import db
-from .models import User, Post
+from . import create_app, db
+from .models import User, Post, Role
 
 
-def users(count=100):
+def clear_db(app):
+    """ Clears all data from the database """
+    with app.app_context():
+        db.drop_all()
+        db.session.remove()
+
+
+def add_users(count=100):
     fake = Faker()
     ii = 0
     while ii < count:
@@ -23,11 +30,11 @@ def users(count=100):
         try:
             db.session.commit()
             ii += 1
-        except IntegrityError:
+        except:
             db.session.rollback()
 
 
-def posts(count=100):
+def add_posts(count=100):
     fake = Faker()
     user_count = User.query.count()
     for ii in range(count):
@@ -35,3 +42,50 @@ def posts(count=100):
         post = Post(body=fake.text(), timestamp=fake.past_date(), author=user)
         db.session.add(post)
     db.session.commit()
+
+
+def add_admin():
+    # add administrator user
+    admin_role = Role.query.filter_by(permissions=0xff).first()
+    admin = User(
+        email="john@example.com",
+        username="john",
+        password="cat",
+        role=admin_role,
+        confirmed=True
+    )
+    db.session.add(admin)
+    db.session.commit()
+
+
+def add_followers():
+    pass
+
+
+def add_comments():
+    pass
+
+
+def main():
+    """ Inserts fake data into the database.
+
+        If the database already exists all data will be deleted.
+
+        DO NOT use in production.
+
+    """
+    app = create_app("development")
+    clear_db(app)
+
+    with app.app_context():
+        db.create_all()
+        Role.insert_roles()
+
+        add_users(100)
+        add_posts(100)
+
+        add_admin()
+
+
+if __name__ == "__main__":
+    main()
