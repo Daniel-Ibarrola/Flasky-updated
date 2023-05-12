@@ -1,12 +1,29 @@
-from flask import render_template, redirect, request, url_for, flash
+from flask import current_app, render_template, redirect, request, url_for, flash
 from flask_login import current_user, login_user, login_required, logout_user
+from flask_mail import Message
+from threading import Thread
 
-from flasky.app import db
-from flasky.app.email import send_email
+from flasky.app import db, mail
 from flasky.app.models import User
 from flasky.app.auth import auth
 from flasky.app.auth.forms import LoginForm, RegistrationForm, ChangePasswordForm, \
     PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
+
+
+def send_async_email(app, msg):
+    with app.app_context():
+        mail.send(msg)
+
+
+def send_email(to, subject, template, **kwargs):
+    app = current_app._get_current_object()
+    msg = Message(app.config['FLASKY_MAIL_SUBJECT_PREFIX'] + ' ' + subject,
+                  sender=app.config['FLASKY_MAIL_SENDER'], recipients=[to])
+    msg.body = render_template(template + '.txt', **kwargs)
+    msg.html = render_template(template + '.html', **kwargs)
+    thr = Thread(target=send_async_email, args=[app, msg])
+    thr.start()
+    return thr
 
 
 @auth.route("/login", methods=["GET", "POST"])

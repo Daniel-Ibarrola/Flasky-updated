@@ -1,5 +1,5 @@
 from random import randint
-# from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError
 from faker import Faker
 from flasky.app import create_app, db
 from flasky.app.models import User, Post, Role
@@ -30,7 +30,7 @@ def add_users(count=100):
         try:
             db.session.commit()
             ii += 1
-        except:
+        except IntegrityError:
             db.session.rollback()
 
 
@@ -74,6 +74,7 @@ def main():
         DO NOT use in production.
 
     """
+    print("Adding fake data to database...")
     app = create_app("development")
     clear_db(app)
 
@@ -82,9 +83,13 @@ def main():
         Role.insert_roles()
 
         add_users(100)
+        print("Finished adding users")
         add_posts(100)
+        print("Finished adding posts")
 
         add_admin()
+
+    print("DONE")
 
 
 if __name__ == "__main__":
