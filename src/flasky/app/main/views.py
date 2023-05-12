@@ -1,11 +1,13 @@
 from flask import abort, current_app, flash, \
     make_response, render_template, request, redirect, url_for
 from flask_login import current_user, login_required
-from . import main
-from .forms import CommentForm, EditProfileForm, EditProfileAdminForm, PostForm
-from .. import db
-from ..models import Comment, User, Role, Permission, Post
-from ..decorators import admin_required, permission_required
+
+
+from flasky.app import db
+from flasky.app.models import Comment, User, Role, Permission, Post
+from flasky.app.decorators import admin_required, permission_required
+from flasky.app.main import main
+from flasky.app.main.forms import CommentForm, EditProfileForm, EditProfileAdminForm, PostForm
 
 
 @main.route("/all")

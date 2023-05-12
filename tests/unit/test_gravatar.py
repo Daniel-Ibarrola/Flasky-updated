@@ -1,6 +1,6 @@
 import pytest
-from app import create_app, db
-from app.models import User, Role
+from flasky.app import create_app, db
+from flasky.app.models import User, Role
 
 
 @pytest.fixture

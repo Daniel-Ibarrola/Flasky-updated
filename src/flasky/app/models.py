@@ -8,8 +8,7 @@ from itsdangerous.exc import BadSignature
 from markdown import markdown
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from . import db
-from . import login_manager
+from flasky.app import db, login_manager
 
 
 class Permission:

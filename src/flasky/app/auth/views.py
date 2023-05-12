@@ -1,11 +1,12 @@
 from flask import render_template, redirect, request, url_for, flash
 from flask_login import current_user, login_user, login_required, logout_user
-from . import auth
-from .forms import LoginForm, RegistrationForm, ChangePasswordForm, \
+
+from flasky.app import db
+from flasky.app.email import send_email
+from flasky.app.models import User
+from flasky.app.auth import auth
+from flasky.app.auth.forms import LoginForm, RegistrationForm, ChangePasswordForm, \
     PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
-from .. import db
-from ..email import send_email
-from ..models import User
 
 
 @auth.route("/login", methods=["GET", "POST"])

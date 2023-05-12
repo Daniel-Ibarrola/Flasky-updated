@@ -1,7 +1,8 @@
 from flask import current_app, jsonify, request
-from . import api
-from .paginate import paginate
-from ..models import Comment
+
+from flasky.app.api import api
+from flasky.app.api.paginate import paginate
+from flasky.app.models import Comment
 
 
 @api.route("/comments/")

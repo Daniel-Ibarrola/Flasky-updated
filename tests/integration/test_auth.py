@@ -1,4 +1,4 @@
-from app.models import User
+from flasky.app.models import User
 import re
 
 

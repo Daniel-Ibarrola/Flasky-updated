@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_pagedown.fields import PageDownField
 from wtforms import BooleanField, SelectField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, Regexp, ValidationError
-from ..models import User, Role
+from flasky.app.models import User, Role
 
 
 class EditProfileForm(FlaskForm):

@@ -1,6 +1,6 @@
 from flask import jsonify
-from ..models import ValidationError
-from . import api
+from flasky.app.models import ValidationError
+from flasky.app.api import api
 
 
 def bad_request(message):

@@ -1,8 +1,8 @@
 from random import randint
 # from sqlalchemy.exc import IntegrityError
 from faker import Faker
-from . import create_app, db
-from .models import User, Post, Role
+from flasky.app import create_app, db
+from flasky.app.models import User, Post, Role
 
 
 def clear_db(app):

@@ -1,8 +1,8 @@
 from datetime import datetime
 import time
 import pytest
-from app import db
-from app.models import AnonymousUser, User, Permission, Role
+from flasky.app import db
+from flasky.app.models import AnonymousUser, User, Permission, Role
 
 
 pytestmark = pytest.mark.usefixtures("set_up_flask_app")

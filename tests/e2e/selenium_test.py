@@ -1,6 +1,6 @@
 from selenium import webdriver
-from app import create_app, db, fake
-from app.models import User, Role
+from flasky.app import create_app, db, fake
+from flasky.app.models import User, Role
 
 
 def setup_selenium_test():

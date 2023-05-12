@@ -1,6 +1,6 @@
 import pytest
 
-from app.models import db, Role, Permission
+from flasky.app.models import Role, Permission
 
 pytestmark = pytest.mark.usefixtures("set_up_flask_app")
 

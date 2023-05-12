@@ -1,8 +1,9 @@
 from flask import g, jsonify
 from flask_httpauth import HTTPBasicAuth
-from ..models import User
-from . import api
-from .errors import unauthorized, forbidden
+
+from flasky.app.models import User
+from flasky.app.api import api
+from flasky.app.api.errors import unauthorized, forbidden
 
 auth = HTTPBasicAuth()
 

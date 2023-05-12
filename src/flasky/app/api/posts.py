@@ -1,10 +1,11 @@
 from flask import current_app, g, jsonify, request, url_for
-from . import api
-from .. import db
-from .errors import forbidden
-from .decorators import permission_required
-from .paginate import paginate
-from ..models import Comment, Post, Permission
+
+from flasky.app import db
+from flasky.app.models import Comment, Post, Permission
+from flasky.app.api import api
+from flasky.app.api.errors import forbidden
+from flasky.app.api.decorators import permission_required
+from flasky.app.api.paginate import paginate
 
 
 @api.route("/posts/")

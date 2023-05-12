@@ -1,7 +1,7 @@
 from base64 import b64encode
 import json
-from app import db
-from app.models import User, Role
+from flasky.app import db
+from flasky.app.models import User, Role
 
 
 def get_api_headers(username, password):

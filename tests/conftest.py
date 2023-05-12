@@ -1,5 +1,5 @@
-from app import create_app, db
-from app.models import Role
+from flasky.app import create_app, db
+from flasky.app.models import Role
 import pytest
 
 
