@@ -1,6 +1,8 @@
+import pytest
+from selenium import webdriver
+
 from flasky.app import create_app, db
 from flasky.app.models import Role
-import pytest
 
 
 def set_up():
@@ -40,3 +42,13 @@ def client_no_cookies():
     client = app.test_client(use_cookies=False)
     yield client
     tear_down(app_context)
+
+
+@pytest.fixture()
+def selenium_driver():
+    driver = webdriver.Firefox()
+    driver.get("http://localhost:5000/")
+
+    yield driver
+
+    driver.quit()

@@ -46,3 +46,4 @@ venv
 
 gmail_app.txt
 exports.sh
+geckodriver.log
